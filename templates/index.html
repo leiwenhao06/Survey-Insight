@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>问卷洞察 · Survey Insight</title>
+  <meta name="description" content="问卷统计与大数据统计结果的本地分析工作台">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231B4332'/%3E%3Cpath d='M8 21V13M15 21V9M22 21V16' stroke='%23F4F0E6' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+            <rect x="1" y="1" width="32" height="32" rx="9" stroke="currentColor" stroke-width="1.2" opacity=".45"/>
+            <path d="M9 23V14M17 23V10M25 23V17" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <div class="brand-name">问卷洞察</div>
+          <div class="brand-sub">SURVEY INSIGHT</div>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-page="overview"><span class="nav-num">01</span><span class="nav-label">数据概览</span></button>
+        <button class="nav-item" data-page="frequency"><span class="nav-num">02</span><span class="nav-label">单题分析</span></button>
+        <button class="nav-item" data-page="crosstab"><span class="nav-num">03</span><span class="nav-label">交叉分析</span></button>
+        <button class="nav-item" data-page="correlation"><span class="nav-num">04</span><span class="nav-label">相关与信度</span></button>
+        <button class="nav-item" data-page="compare"><span class="nav-num">05</span><span class="nav-label">大数据对比</span></button>
+        <button class="nav-item" data-page="insights"><span class="nav-num">06</span><span class="nav-label">洞察与导出</span></button>
+      </nav>
+
+      <div class="sidebar-dataset" id="sidebar-dataset">
+        <div class="sd-label">当前数据集</div>
+        <div class="sd-empty">尚未导入数据</div>
+      </div>
+
+      <div class="sidebar-foot">
+        <div class="sd-label">LOCAL FIRST</div>
+        <p>数据仅在本地 Flask 服务中处理，不发送到第三方。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-copy">
+          <div class="eyebrow" id="page-eyebrow">ANALYSIS WORKSPACE</div>
+          <h1 id="page-title">数据概览</h1>
+          <p id="page-subtitle">从答卷明细到可读结论，一张工作台完成全部分析。</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn ghost" id="btn-import" type="button">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5v8m0 0L4.6 6.6M7.5 9.5l2.9-2.9M2 12.5h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            导入数据
+          </button>
+          <button class="btn primary" id="btn-export" type="button" disabled>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 9.5v-8m0 0L4.6 4.4M7.5 1.5l2.9 2.9M2 10v2.5h11V10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            导出 Excel
+          </button>
+        </div>
+      </header>
+
+      <div class="dataset-bar hidden" id="dataset-bar">
+        <div class="dataset-main">
+          <span class="live-dot"></span>
+          <span id="dataset-name">—</span>
+          <span class="dataset-meta" id="dataset-meta"></span>
+        </div>
+        <div class="dataset-tail">
+          <span class="baseline-pill" id="baseline-pill">未载入基准数据</span>
+          <button class="link-btn" id="btn-change-data" type="button">更换数据</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <section class="empty-state" id="empty-state">
+          <div class="empty-grid">
+            <div class="empty-copy">
+              <div class="eyebrow">START HERE / 开始分析</div>
+              <h2>把问卷数据，<br>变成<span class="accent">可读的洞察</span>。</h2>
+              <p class="empty-lead">上传问卷明细，自动识别题型、生成频数与交叉分析；再叠加一份大数据统计结果，看看你的样本与世界有什么不同。</p>
+              <div class="empty-actions">
+                <button class="btn primary lg" id="btn-empty-import" type="button">导入问卷数据</button>
+                <button class="btn ghost lg" id="btn-empty-sample" type="button">用示例数据体验 →</button>
+              </div>
+              <div class="empty-note">
+                支持 CSV / Excel（.xlsx）· 自动识别 UTF-8 / GBK 编码 · 文件不超过 30MB
+              </div>
+            </div>
+            <div class="empty-visual" aria-hidden="true">
+              <div class="poster-card">
+                <div class="poster-head"><span>SAMPLE / 286</span><span>2026 · Q3</span></div>
+                <div class="poster-title">数字生活<br>质量观察</div>
+                <div class="poster-bars">
+                  <div class="pb" style="--h:42%"><span>性别</span></div>
+                  <div class="pb" style="--h:68%"><span>年龄</span></div>
+                  <div class="pb" style="--h:54%"><span>城市</span></div>
+                  <div class="pb" style="--h:82%"><span>应用</span></div>
+                  <div class="pb" style="--h:61%"><span>满意度</span></div>
+                  <div class="pb" style="--h:73%"><span>AI</span></div>
+                </div>
+                <div class="poster-foot"><span>FIG. 01</span><span>自动生成 · 可交互</span></div>
+              </div>
+              <div class="poster-stamp">INSIGHT<br>LAB</div>
+            </div>
+          </div>
+          <div class="empty-features">
+            <div class="feature"><span>01</span><h3>自动识别题型</h3><p>单选、多选、量表、数值与开放题，无需手工标注。</p></div>
+            <div class="feature"><span>02</span><h3>统计检验到位</h3><p>卡方、Cramér's V、t 检验 / ANOVA、Cronbach's α 一并给出。</p></div>
+            <div class="feature"><span>03</span><h3>大数据对照</h3><p>上传聚合基准，对齐口径，量化偏差与显著性。</p></div>
+            <div class="feature"><span>04</span><h3>一键出报告</h3><p>多工作表 Excel 与打印级洞察报告，结论可直接引用。</p></div>
+          </div>
+        </section>
+
+        <div id="page-root" class="hidden">
+          <section class="page" id="page-overview" data-page="overview"></section>
+          <section class="page" id="page-frequency" data-page="frequency"></section>
+          <section class="page" id="page-crosstab" data-page="crosstab"></section>
+          <section class="page" id="page-correlation" data-page="correlation"></section>
+          <section class="page" id="page-compare" data-page="compare"></section>
+          <section class="page" id="page-insights" data-page="insights"></section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">DATA INTAKE</div>
+          <h2 id="modal-title">导入分析数据</h2>
+          <p>先导入问卷明细；大数据基准可选，用于对照分析。</p>
+        </div>
+        <button class="icon-btn" id="modal-close" type="button" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-grid">
+          <div class="import-card">
+            <div class="import-card-head">
+              <span class="step-index">01</span>
+              <div><h3>问卷明细数据</h3><p>每行一份答卷，每列一道题。</p></div>
+              <span class="req">必填</span>
+            </div>
+            <label class="dropzone" id="drop-survey" data-kind="survey">
+              <input type="file" hidden id="file-survey" accept=".csv,.tsv,.xlsx,.xls">
+              <span class="dz-icon">
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 17V4m0 0L8.5 8.5M13 4l4.5 4.5M4 17.5V20a2 2 0 002 2h14a2 2 0 002-2v-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="dz-title">拖拽文件到此处，或 <u>点击选择</u></span>
+              <span class="dz-hint">CSV / TSV / Excel · 最大 30MB</span>
+            </label>
+            <div class="import-status" id="status-survey"></div>
+            <a class="text-link" href="/api/template/survey">下载明细数据格式示例 ↓</a>
+          </div>
+
+          <div class="import-card">
+            <div class="import-card-head">
+              <span class="step-index">02</span>
+              <div><h3>大数据统计结果</h3><p>聚合长表：题目 / 选项 / 比例或频数。</p></div>
+              <span class="opt">可选</span>
+            </div>
+            <label class="dropzone" id="drop-baseline" data-kind="baseline">
+              <input type="file" hidden id="file-baseline" accept=".csv,.tsv,.xlsx,.xls">
+              <span class="dz-icon">
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M4 20V13m6 7V8m6 12v-5m6 5V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <span class="dz-title">拖拽文件到此处，或 <u>点击选择</u></span>
+              <span class="dz-hint">需包含「题目 / 选项」与「比例」或「频数」列</span>
+            </label>
+            <div class="import-status" id="status-baseline"></div>
+            <a class="text-link" href="/api/template/baseline">下载基准数据格式示例 ↓</a>
+          </div>
+        </div>
+        <div class="import-tip">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6.2" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 4.5v3.6M7.5 10.4v.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          所有分析均在本机完成。示例数据为模拟数据，仅用于演示功能。
+        </div>
+        <div class="modal-foot">
+          <button class="btn ghost" id="btn-sample" type="button">载入示例数据</button>
+          <div class="spacer"></div>
+          <button class="btn primary" id="modal-done" type="button">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+  <div class="chart-tip hidden" id="chart-tip"></div>
+
+  <script src="{{ url_for('static', filename='js/util.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/pages.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/report.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

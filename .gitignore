@@ -1,0 +1,23 @@
+# Python / virtualenv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local analysis outputs & dev artifacts
+tools/screens/
+uploads/
+*.xlsx
+*.xls
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+.env
