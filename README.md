@@ -75,7 +75,7 @@ python tools/make_sample.py
 
 ### 配置方式
 
-推荐把密钥放在 **`.secrets/llm.json`**（已加入 `.gitignore`，不会提交到仓库）：
+推荐把密钥放在 **`.secrets/llm.json`**：
 
 ```json
 {
