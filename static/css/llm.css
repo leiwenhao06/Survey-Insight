@@ -84,8 +84,7 @@
   padding-top: 12px;
   border-top: 1px dashed var(--line);
 }
-.llm-form-hint { flex: 1 1 320px; font-size: 9.5px; line-height: 1.65; color: var(--faint); }
-.llm-form-hint code, .md code, .llm-privacy-card code {
+.md code, .llm-privacy-card code {
   font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   font-size: .93em;
   padding: 1px 4px;

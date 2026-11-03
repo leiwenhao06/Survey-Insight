@@ -107,7 +107,6 @@
       const changed = Boolean(state.status && fresh.configured !== state.status.configured);
       state.status = fresh;
       updateStatusChip();
-      updateConfigHint();
       updateActionAvailability();
       if (changed && !state.summaryStreaming && !state.chatStreaming) {
         const root = document.getElementById('page-llm');
@@ -160,15 +159,14 @@
           </div>
           <div class="field">
             <label for="llm-model">模型名称</label>
-            <input type="text" id="llm-model" value="${e(cfg.model || '')}" placeholder="例如 gpt-4o-mini / deepseek-chat / claude-sonnet-5" autocomplete="off" spellcheck="false">
+            <input type="text" id="llm-model" value="${e(cfg.model || '')}" autocomplete="off" spellcheck="false">
           </div>
           <div class="field">
             <label for="llm-key">API Key</label>
-            <input type="password" id="llm-key" value="" placeholder="${cfg.api_key_set ? `已配置 ${e(cfg.api_key_hint)}，留空保持不变` : '本地模型服务可留空'}" autocomplete="off">
+            <input type="password" id="llm-key" value="" autocomplete="off">
           </div>
         </div>
         <div class="llm-form-foot">
-          <span class="llm-form-hint">${configHintHTML()}</span>
           <div class="spacer"></div>
           ${cfg.api_key_set ? '<button class="btn sm subtle" id="llm-clear-key" type="button">清除密钥</button>' : ''}
           <button class="btn sm subtle" id="llm-deepseek" type="button" title="填入成本优先的 DeepSeek 配置">DeepSeek 预设</button>
@@ -255,20 +253,10 @@
     updateActionAvailability();
   }
 
-  function sourceLabel(source) {
-    return {
-      runtime: '界面配置', env: '环境变量', file: '本地配置文件 .secrets/llm.json', default: '默认配置',
-    }[source] || '默认配置';
-  }
-
   function agentSupported() {
     const cfg = state.status || {};
     if (cfg.provider === 'anthropic') return false;
     return cfg.agent_supported !== false;
-  }
-
-  function configHintHTML() {
-    return `也支持环境变量 <code>SI_LLM_PROVIDER</code> / <code>SI_LLM_BASE_URL</code> / <code>SI_LLM_MODEL</code> / <code>SI_LLM_API_KEY</code>，或本地文件 <code>.secrets/llm.json</code>（已忽略提交）。当前来源：${e(sourceLabel((state.status || {}).source))}。`;
   }
 
   function statusChipHTML() {
@@ -289,11 +277,6 @@
     const configured = state.status && state.status.configured;
     chip.className = `chip ${configured ? 'good' : 'warn'}`;
     chip.innerHTML = statusChipHTML();
-  }
-
-  function updateConfigHint() {
-    const hint = document.querySelector('#llm-config-card .llm-form-hint');
-    if (hint && state.status) hint.innerHTML = configHintHTML();
   }
 
   function updateActionAvailability() {
@@ -457,7 +440,6 @@
     const st = await App.post('/api/llm/config', payload);
     state.status = st;
     updateStatusChip();
-    updateConfigHint();
     updateActionAvailability();
     return st;
   }
