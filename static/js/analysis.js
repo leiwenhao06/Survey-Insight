@@ -342,7 +342,7 @@
     root.innerHTML = `
       <div class="corr-layout">
         <div class="card corr-matrix-card">
-          ${cardHead('Spearman 相关矩阵', `${data.summary} 相关使用成对完整数据计算。`)}
+          ${cardHead('Spearman 相关矩阵', `${data.summary} 相关使用成对完整数据计算。`, '<button class="link-btn" data-goto="llm">AI 解读 →</button>')}
           <div class="corr-matrix-scroll">
             <table class="corr-table"><thead>${head}</thead><tbody>${body}</tbody></table>
           </div>

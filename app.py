@@ -10,8 +10,10 @@ from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import (Flask, Response, jsonify, render_template, request, send_file,
+                   stream_with_context)
 
+from utils import llm
 from utils.baseline import BaselineDataset
 from utils.dataio import (DataError, jsonable, load_sample_baseline, load_sample_survey,
                           read_table)
@@ -98,6 +100,11 @@ def handle_data_error(exc: DataError):
 @app.errorhandler(ValueError)
 def handle_value_error(exc: ValueError):
     return jsonify({"error": str(exc)}), 400
+
+
+@app.errorhandler(llm.LlmError)
+def handle_llm_error(exc: llm.LlmError):
+    return jsonify({"error": str(exc)}), 502
 
 
 @app.errorhandler(KeyError)
@@ -268,6 +275,72 @@ def compare_api():
     if not bq or not sq:
         raise ApiError("请选择基准题目与对应的问卷题目。")
     return ok(baseline.compare(ds, bq, sq))
+
+
+# --------------------------------------------------------------------- AI 解读（LLM）
+def _sse_response(events) -> Response:
+    return Response(
+        stream_with_context(events),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
+def _require_llm():
+    if not llm.is_configured():
+        raise ApiError(llm.NOT_CONFIGURED, 400)
+
+
+@app.get("/api/llm/status")
+def llm_status():
+    return ok(llm.status())
+
+
+@app.post("/api/llm/config")
+def llm_config():
+    body = request.get_json(silent=True) or {}
+    return ok(llm.configure(body))
+
+
+@app.post("/api/llm/test")
+def llm_test():
+    _require_llm()
+    return ok({"ok": True, "reply": llm.ping()})
+
+
+@app.get("/api/llm/context")
+def llm_context():
+    ds = get_survey(request.args.get("dataset_id"))
+    baseline = get_baseline(request.args.get("baseline_id"))
+    brief = llm.build_analysis_context(ds, baseline)
+    return ok({"context": brief, "chars": len(brief)})
+
+
+@app.post("/api/llm/summary")
+def llm_summary():
+    body = request.get_json(silent=True) or {}
+    _require_llm()
+    ds = get_survey(body.get("dataset_id"))
+    baseline = get_baseline(body.get("baseline_id"))
+    focus = str(body.get("focus") or "")[:200]
+    return _sse_response(llm.stream_events(llm.summary_messages(ds, baseline, focus), max_tokens=2000))
+
+
+@app.post("/api/llm/chat")
+def llm_chat():
+    body = request.get_json(silent=True) or {}
+    _require_llm()
+    ds = get_survey(body.get("dataset_id"))
+    baseline = get_baseline(body.get("baseline_id"))
+    history = body.get("history")
+    if not isinstance(history, list) or not history:
+        raise ApiError("请先输入要询问的问题。")
+    use_agent = bool(body.get("agent", True))
+    return _sse_response(llm.chat_events(ds, baseline, history, use_agent=use_agent))
 
 
 # --------------------------------------------------------------------- 洞察与导出

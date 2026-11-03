@@ -21,3 +21,6 @@ Thumbs.db
 *.swp
 *.swo
 .env
+
+# Local secrets (LLM API keys)
+.secrets/

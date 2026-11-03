@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/llm.css') }}">
 </head>
 <body>
   <div class="app">
@@ -33,6 +34,7 @@
         <button class="nav-item" data-page="correlation"><span class="nav-num">04</span><span class="nav-label">相关与信度</span></button>
         <button class="nav-item" data-page="compare"><span class="nav-num">05</span><span class="nav-label">大数据对比</span></button>
         <button class="nav-item" data-page="insights"><span class="nav-num">06</span><span class="nav-label">洞察与导出</span></button>
+        <button class="nav-item" data-page="llm"><span class="nav-num">07</span><span class="nav-label">AI 解读</span></button>
       </nav>
 
       <div class="sidebar-dataset" id="sidebar-dataset">
@@ -42,7 +44,7 @@
 
       <div class="sidebar-foot">
         <div class="sd-label">LOCAL FIRST</div>
-        <p>数据仅在本地 Flask 服务中处理，不发送到第三方。</p>
+        <p>默认仅在本机处理；启用「AI 解读」后，仅把聚合统计摘要发送到你配置的模型服务。</p>
       </div>
     </aside>
 
@@ -124,6 +126,7 @@
           <section class="page" id="page-correlation" data-page="correlation"></section>
           <section class="page" id="page-compare" data-page="compare"></section>
           <section class="page" id="page-insights" data-page="insights"></section>
+          <section class="page" id="page-llm" data-page="llm"></section>
         </div>
       </div>
     </main>
@@ -199,6 +202,7 @@
   <script src="{{ url_for('static', filename='js/analysis.js') }}"></script>
   <script src="{{ url_for('static', filename='js/compare.js') }}"></script>
   <script src="{{ url_for('static', filename='js/report.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/llm.js') }}"></script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

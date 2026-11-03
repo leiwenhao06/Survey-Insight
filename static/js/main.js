@@ -36,6 +36,11 @@
       eyebrow: 'ANALYSIS WORKSPACE / 06',
       subtitle: '汇总可引用的结论，导出 Excel 工作簿或打印分析报告。',
     },
+    llm: {
+      title: 'AI 解读',
+      eyebrow: 'ANALYSIS WORKSPACE / 07',
+      subtitle: '让大模型汇总相关分析结果，并就统计方法与数据含义继续追问。',
+    },
   };
 
   let sampleBusy = false;
@@ -362,7 +367,7 @@
     S().questions = res.questions || [];
     App.clearCaches();
     S().freqQuestion = null;
-    ['frequency', 'crosstab', 'correlation', 'compare'].forEach((p) => {
+    ['frequency', 'crosstab', 'correlation', 'compare', 'llm'].forEach((p) => {
       if (App.pages[p] && App.pages[p].reset) App.pages[p].reset();
     });
     App.persist();
@@ -378,6 +383,7 @@
     S().caches.comparisons = {};
     S().caches.insights = null;
     if (App.pages.compare && App.pages.compare.reset) App.pages.compare.reset();
+    if (App.pages.llm && App.pages.llm.reset) App.pages.llm.reset();
     App.persist();
     refreshDatasetBar();
     renderImportStatuses();
@@ -391,6 +397,7 @@
     S().caches.comparisons = {};
     S().caches.insights = null;
     if (App.pages.compare && App.pages.compare.reset) App.pages.compare.reset();
+    if (App.pages.llm && App.pages.llm.reset) App.pages.llm.reset();
     App.persist();
     refreshDatasetBar();
     renderImportStatuses();

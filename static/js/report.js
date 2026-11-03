@@ -98,6 +98,7 @@
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M4 5.5V1.5h7v4M4 11.5H2.5v-6h10v6H11M4 9h7v4.5H4V9z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
                 打印洞察报告
               </button>
+              <button class="btn" type="button" data-goto="llm">AI 解读相关结果 →</button>
               <a class="btn" href="/api/template/baseline">下载基准数据模板 ↓</a>
             </div>
             <div class="export-divider"></div>

@@ -1,6 +1,6 @@
 # 问卷洞察 · Survey Insight
 
-一个本地运行的问卷数据分析 Web 应用。上传问卷明细（CSV / Excel），自动完成题型识别、频数统计、交叉分析、相关与信度检验；再接入一份大数据聚合统计结果，量化样本与基准之间的偏差和显著性，并导出 Excel 报告或打印洞察报告。
+一个本地运行的问卷数据分析 Web 应用。上传问卷明细（CSV / Excel），自动完成题型识别、频数统计、交叉分析、相关与信度检验；再接入一份大数据聚合统计结果，量化样本与基准之间的偏差和显著性，并导出 Excel 报告或打印洞察报告。可选接入大模型（LLM），对相关分析结果生成解读，并通过可调用本地分析工具的 Agent 继续追问。
 
 后端使用 **Flask**，前端使用原生 **HTML + CSS + JavaScript**，图表为无依赖的手写 SVG，全部离线可用。
 
@@ -16,10 +16,11 @@
 | 相关与信度 | Spearman 相关矩阵、显著相关对；按题目名称前缀分组的 Cronbach's α、删除后 α、校正后题总相关 |
 | 大数据对比 | 自动匹配基准题目；选项对齐；分布重合度 / 余弦相似度；逐项双比例 z 检验；整体卡方拟合优度；差异表与分组对比图 |
 | 洞察与导出 | 自动生成可读结论；多工作表带格式 Excel；可打印为 PDF 的洞察报告 |
+| AI 解读（可选） | 调用 LLM 汇总 Spearman 相关矩阵与 Cronbach's α；流式输出结构化解读；Agent 模式可按需调用频数、交叉分析、分组比较、基准对比等本地工具回答追问 |
 
 **数据质量检查**：缺失率、重复答卷、量表直线作答、低完成题目，并汇总为 0–100 的质量分。
 
-**本地优先**：所有数据仅在本地 Flask 进程内解析与统计，不发送到任何第三方服务；前端不加载任何 CDN 资源。
+**本地优先**：默认情况下所有数据仅在本地 Flask 进程内解析与统计，前端不加载任何 CDN 资源。只有主动使用「AI 解读」时，才会把**聚合统计摘要**（题目名称、相关系数、信度、质量指标等，不含原始答卷）发送到你配置的模型服务；模型地址与密钥完全由你控制。
 
 ---
 
@@ -62,6 +63,60 @@ python app.py
 ```bash
 python tools/make_sample.py
 ```
+
+---
+
+## AI 解读与 Agent（可选）
+
+「AI 解读」页会读取当前数据集的聚合统计摘要，生成相关分析总结；下方的追问支持两种模式：
+
+- **上下文问答**：模型只基于已发送的相关矩阵、显著相关对、信度与数据质量摘要回答。
+- **Agent 分析模式（默认开启）**：模型可以按需调用本地工具，进一步查询具体题目分布、交叉分析、分组均值比较、相关/信度细节、大数据基准对比等。工具在本地执行，返回给模型的仍是聚合结果。
+
+### 配置方式
+
+推荐把密钥放在 **`.secrets/llm.json`**（已加入 `.gitignore`，不会提交到仓库）：
+
+```json
+{
+  "provider": "openai",
+  "base_url": "https://api.deepseek.com",
+  "model": "deepseek-chat",
+  "api_key": "sk-...",
+  "timeout": 180
+}
+```
+
+默认接入 DeepSeek 的 `deepseek-chat`（成本优先，适合本类解读与工具调用）。如需更强的推理能力，可在界面中换成 `deepseek-reasoner`，但 token 成本与延迟更高。
+
+也支持环境变量（优先级高于本地文件）：
+
+```bash
+# Windows cmd
+set SI_LLM_PROVIDER=openai
+set SI_LLM_BASE_URL=https://api.deepseek.com
+set SI_LLM_MODEL=deepseek-chat
+set SI_LLM_API_KEY=sk-...
+```
+
+```bash
+# macOS / Linux
+export SI_LLM_PROVIDER=openai
+export SI_LLM_BASE_URL=https://api.deepseek.com
+export SI_LLM_MODEL=deepseek-chat
+export SI_LLM_API_KEY=sk-...
+```
+
+支持 **OpenAI 兼容接口**（DeepSeek、通义千问、Moonshot、Ollama、vLLM 等）与 **Anthropic Messages API**。Ollama 等本地服务可将 `base_url` 设为 `http://127.0.0.1:11434/v1` 并留空 API Key。Agent 工具调用仅支持 OpenAI 兼容接口；Anthropic 走上下文问答。
+
+界面中的配置优先级最高，但**仅保存在当前 Flask 进程内存中**，重启后回到本地文件 / 环境变量配置。页面侧栏提供「预览将要发送的上下文」，便于核对发送内容。
+
+### 隐私边界
+
+- 发送内容：题目名称、题型、样本量、相关系数与 p 值、Cronbach's α、数据质量指标、基准对比摘要，以及 Agent 工具返回的聚合结果。
+- 不发送：原始答卷行、开放题原文、标识列与时间列明细。
+- 题目名称本身也会被发送，请不要在题名或选项文本中放入个人信息或敏感信息。
+- AI 生成内容可能出错，统计结论请以页面上的计算结果为准。
 
 ---
 
@@ -139,7 +194,7 @@ python tools/make_sample.py
 ├─ templates/
 │  └─ index.html           # 单页应用壳
 ├─ static/
-│  ├─ css/                 # base / components / pages 设计系统
+│  ├─ css/                 # base / components / pages / llm 设计系统
 │  └─ js/
 │     ├─ util.js           # 状态、API、格式化
 │     ├─ charts.js         # 手写 SVG 图表
@@ -147,6 +202,7 @@ python tools/make_sample.py
 │     ├─ analysis.js       # 交叉分析、相关与信度
 │     ├─ compare.js        # 大数据对比
 │     ├─ report.js         # 洞察页、打印报告、导出
+│     ├─ llm.js            # AI 解读、流式问答、Agent 工具状态
 │     └─ main.js           # 导航、数据导入、启动
 ├─ utils/
 │  ├─ dataio.py            # 编码识别、文件读取
@@ -154,7 +210,11 @@ python tools/make_sample.py
 │  ├─ statistics.py        # 卡方、ANOVA、相关、信度
 │  ├─ baseline.py          # 基准解析、匹配与对比
 │  ├─ insights.py          # 自动结论
+│  ├─ llm.py               # LLM 客户端、配置、上下文与流式输出
+│  ├─ agent.py             # Agent 可调用的本地分析工具
 │  └─ report.py            # Excel 工作簿
+├─ .secrets/
+│  └─ llm.json             # 本地模型配置（已忽略提交）
 └─ tools/
    └─ make_sample.py       # 示例数据生成
 ```
@@ -173,6 +233,12 @@ python tools/make_sample.py
 | GET | `/api/comparison/meta` | 基准题目匹配 |
 | POST | `/api/compare` | 单题大数据对比 |
 | GET | `/api/insights` | 自动洞察 |
+| GET | `/api/llm/status` | 模型服务配置状态（不回传密钥） |
+| POST | `/api/llm/config` | 更新运行时配置（进程内存） |
+| POST | `/api/llm/test` | 测试模型连接 |
+| GET | `/api/llm/context` | 预览将发送给模型的聚合上下文 |
+| POST | `/api/llm/summary` | 流式生成相关分析总结（SSE） |
+| POST | `/api/llm/chat` | 流式追问；`agent=true` 时启用工具调用（SSE） |
 | GET | `/api/export/excel` | 导出 Excel 工作簿 |
 
 数据结构保留在服务端内存中（最多 8 个数据集，LRU 淘汰），重启服务后需要重新上传；浏览器会在本地记住最近一次数据集 ID，失效时会自动清除。
@@ -191,7 +257,13 @@ python tools/make_sample.py
 基准题目名称需与问卷题目名称一致（忽略空格、题号前缀与「多选/单选」括注）。也可以在大数据对比页手动选择对应问卷题目。
 
 **Q：数据会保存到磁盘或云端吗？**
-不会。数据只保存在当前 Flask 进程内存中；导出的 Excel / 打印报告由浏览器下载。不建议在公网直接暴露该服务。
+问卷数据只保存在当前 Flask 进程内存中；导出的 Excel / 打印报告由浏览器下载。启用 AI 解读时，聚合统计摘要会发送到你配置的模型服务。API Key 可保存在 `.secrets/llm.json`（已忽略提交）或环境变量中；界面填写的配置只存在于进程内存。不建议在公网直接暴露该服务。
+
+**Q：AI 解读会发送原始答卷吗？**
+不会。只会发送题目名称、题型、样本量、相关系数、p 值、Cronbach's α、数据质量与基准对比等聚合信息；Agent 工具返回的也是聚合结果。仍建议不要在题名或选项里放入个人信息。
+
+**Q：AI 回答很慢或报 401 / 404？**
+先在「AI 解读 → 配置模型」中点击「测试连接」。401/403 通常是 Key 无效，404 通常是 Base URL 或模型名称错误。DeepSeek 的 Base URL 使用 `https://api.deepseek.com`，模型使用 `deepseek-chat`。若接口不支持 function calling，系统会自动回退为上下文问答。
 
 **Q：Excel 导出很慢？**
 Excel 会写入原始明细表；较大的数据集（数万行）导出会耗时较长，属于正常现象。
